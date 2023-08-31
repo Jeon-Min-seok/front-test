@@ -1,41 +1,46 @@
-name: Create and publish a Docker image to GCP Artifact Registry, Deploy to Cloudtype
+name: Deploy to Amazon ECS
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
 
 env:
-  REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
-  IMAGE_NAME: ecr-test # AWS에서 작성했던 이미지 명과 일치
+  AWS_REGION: MY_AWS_REGION                   # set this to your preferred AWS region, e.g. us-west-1
+  ECR_REPOSITORY: MY_ECR_REPOSITORY           # set this to your Amazon ECR repository name
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-push-image:
+  deploy:
+    name: Deploy
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    environment: production
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      
-      - name: Log in to the Container registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: _json_key
-          password: ${{ secrets.GAR_JSON_KEY }}
-          
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=sha
-      - name: Build and push Docker image
-        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-northeast-2
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ecr-test
+        IMAGE_TAG: ecr-test
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+
+
