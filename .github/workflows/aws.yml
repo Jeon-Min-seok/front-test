@@ -1,4 +1,4 @@
-name: Deploy to EC
+name: push ecr
 
 on:
  
