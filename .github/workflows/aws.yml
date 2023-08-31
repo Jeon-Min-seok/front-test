@@ -1,22 +1,23 @@
-name: test # 워크 플로우 이름
+name: Deploy to ECR
 
-on:    #  이벤트 트리거/ 이벤트 감지 했을 경우 코드 실행 
+on:
+ 
   push:
-    branches: [ "main" ] # main으로 push 할 경우 실행
-
-permissions:
-  contents: read
+    branches: [ master ]
 
 jobs:
-  deploy:
-    name: Deploy
+  
+  build:
+    
+    name: Build Image
     runs-on: ubuntu-latest
-    environment: production
 
+   
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
 
+    - name: Check out code
+      uses: actions/checkout@v2
+    
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -29,19 +30,10 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build, tag, and push image to Amazon ECR
-      id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ecr-test
-        IMAGE_TAG: ${{ github.sha }}
+        IMAGE_TAG: latest
       run: |
-        # Build a docker container and
-        # push it to ECR so that it can
-        # be deployed to ECS.
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-
-      
-        
-        
