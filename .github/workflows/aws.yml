@@ -1,52 +1,41 @@
-name: Java CI with Gradle
+name: Create and publish a Docker image to GCP Artifact Registry, Deploy to Cloudtype
 
 on:
-  pull_request:
-    branches: [ "main" ]
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
+  IMAGE_NAME: ecr-test # AWS에서 작성했던 이미지 명과 일치
 
 jobs:
-  build:
-    ## checkout후 자바 17 버전으로 설정을 합니다
+  build-and-push-image:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
         with:
-          java-version: '17'
-          distribution: 'temurin'
-      ## gradlew 의 권한을 줍니다.
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-       
-      ## gradle build
-      - name: Build with Gradle
-        run: ./gradlew clean build --debug
-     ## 이미지 태그에 시간 설정을 하기위해서 현재 시간을 가져옵니다. 
-      - name: Get current time
-        uses: 1466587594/get-current-time@v2
-        id: current-time
+          registry: ${{ env.REGISTRY }}
+          username: _json_key
+          password: ${{ secrets.GAR_JSON_KEY }}
+          
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          format: YYYY-MM-DDTHH-mm-ss
-          utcOffset: "+09:00"
-
-      - name: Show Current Time
-        run: echo "CurrentTime=${{steps.current-time.outputs.formattedTime}}"
-      ## AWS에 로그인합니다. aws-region은 서울로 설정(ap-northeast-2)했습니다
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha
+      - name: Build and push Docker image
+        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
-      ## ECR에 로그인합니다
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-      ## sample라는 ECR 리파지터리에 현재 시간 태그를 생성하고, 푸쉬합니다. xxx부분은 본인의 레파지터리 주소입니다.
-      ## 앞의 스탭에서 ${{steps.current-time.outputs.formattedTime}}로 현재 시간을 가져옵니다.
-      - name: Build, tag, and push image to Amazon ECR
-        run: |
-          docker build -t sample:${{steps.current-time.outputs.formattedTime}} .
-          docker tag sample:${{steps.current-time.outputs.formattedTime}} 107647632326.dkr.ecr.ap-northeast-2.amazonaws.com/ecr-test:${{steps.current-time.outputs.formattedTime}}
-          docker push 107647632326.dkr.ecr.ap-northeast-2.amazonaws.com/ecr-test:${{steps.current-time.outputs.formattedTime}}
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
