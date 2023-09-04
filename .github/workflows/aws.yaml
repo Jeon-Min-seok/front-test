@@ -19,7 +19,7 @@ jobs:
       id: tag_version
       uses: mathieudutour/github-tag-action@v5.5 # 가져다 쓸 auto tagging 프로그램
       with:
-        github_token: ${{ secrets.TOKEN }} # secrets.GITHUB_TOKEN 는 자동생성됨
+        github_token: ${{ secrets.TOKEN }} # secrets.GITHUB_TOKEN 는 자동생성됨 / 임시조치
         
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -40,4 +40,15 @@ jobs:
       run: | # 도커 파일 빌드 후 푸쉬
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    - name: Commit manifest files
+        env:
+          github_token: ${{ secrets.TOKEN }}
+        run: |
+          cd eyestalk-manifest
+          git config --global user.email "jeonms216@gmail.com"
+          git config --global user.name "Jeon-Min-seok"
+          git config --global github.token ${{ secrets.TOKEN }}
+          git commit -am "Update image tag ${{ steps.tag_version.outputs.new_tag }}"
+          git push -u origin main
 
