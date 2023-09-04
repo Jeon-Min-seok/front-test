@@ -49,17 +49,22 @@ jobs:
         github_token: ${{ secrets.TOKEN }} # Github Action token을 발급받아서 repo secrect에 등록해줘야한다
         path: argo-cd # 최상위 경로로 repository와 동일하게 
 
-    - name: change haha.yaml
+    - name: change index.html
       run: |
-        cat <<EOF > haha.yaml
+        cat <<EOF > index.html
         image:
           tag: ${{ steps.tag_version.outputs.new_tag }}
         EOF
-    - name: git push
-      run: |
-        git config --global user.email "jeonms216@gmail.com"
-        git config --global user.name "Jeon-Min-seok"
-        git add haha.yaml
-        git commit -m "change dockertag"
-        git pull origin main  
-        git push origin main  
+        
+    - name: Pushes to another repository
+      id: push_directory
+      uses: cpina/github-action-push-to-another-repository@main
+      env:
+        API_TOKEN_GITHUB: ${{ secrets.TOKEN }}
+          with:
+            source-directory: 'output'
+            destination-github-username: 'Jeon-Min-Seok'
+            destination-repository-name: 'argo-cd'
+            commit-message: ${{ steps.tag_version.outputs.new_tag }}
+            target-branch: main
+            target-directory: /
