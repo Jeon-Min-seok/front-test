@@ -45,10 +45,14 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: Jeon-Min-seok/argo-cd # k8s yaml 파일이 있는 repo
-        ref: main  # branch 이름
+        ref: "main"  # branch 이름
         github_token: ${{ secrets.TOKEN }} # Github Action token을 발급받아서 repo secrect에 등록해줘야한다
         path: argo-cd # 최상위 경로로 repository와 동일하게 
 
+    - name: change index.html
+      run: |
+        cat <<EOF > index.html
+        EOF
         
     - name: git push
       run: |
@@ -56,4 +60,5 @@ jobs:
         git config --global user.name "Jeon-Min-seok"
         git add index.html
         git commit -m "change dockertag"
+        git pull origin main
         git push origin main  
