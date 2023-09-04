@@ -1,4 +1,4 @@
-name: push ecr 2 # 이름설정
+name: push ecr 3 # 이름설정
 
 on:  # bracnch main push 감지 시 실행
   push:
