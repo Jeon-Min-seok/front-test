@@ -49,9 +49,9 @@ jobs:
         github_token: ${{ secrets.TOKEN }} # Github Action token을 발급받아서 repo secrect에 등록해줘야한다
         path: argo-cd # 최상위 경로로 repository와 동일하게 
 
-    - name: change values-dev.yaml
+    - name: change index.html
       run: |
-        cat <<EOF > values-dev.yaml
+        cat <<EOF > index.html
         image:
           tag: ${{ steps.tag_version.outputs.new_tag }}
         EOF
