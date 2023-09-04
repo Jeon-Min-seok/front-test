@@ -61,4 +61,5 @@ jobs:
         git config --global user.name "Jeon-Min-seok"
         git add haha.yaml
         git commit -m "change dockertag"
+        git pull origin main  
         git push origin main  
