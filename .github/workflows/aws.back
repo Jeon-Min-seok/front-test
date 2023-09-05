@@ -1,4 +1,4 @@
-name: push ecr 2 # 이름설정
+name: push ecr # 이름설정
 
 on:  # bracnch main push 감지 시 실행
   push:
@@ -19,7 +19,7 @@ jobs:
       id: tag_version
       uses: mathieudutour/github-tag-action@v5.5 # 가져다 쓸 auto tagging 프로그램
       with:
-        github_token: ${{ secrets.TOKEN }} # secrets.GITHUB_TOKEN 는 자동생성됨
+        github_token: ${{ secrets.TOKEN }} # secrets.GITHUB_TOKEN 는 자동생성됨 / 임시조치
         
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -40,4 +40,23 @@ jobs:
       run: | # 도커 파일 빌드 후 푸쉬
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    - name: change index.html
+      run: |
+        cat <<EOF > index.html
+        image:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+        EOF
+
+    - name: Pushes test file
+      uses: dmnemec/copy_file_to_another_repo_action@main
+      env:
+        API_TOKEN_GITHUB: ${{ secrets.TOKEN }}
+      with:
+        source_file: 'index.html'
+        destination_repo: 'Jeon-Min-seok/argo-cd'
+        destination_folder: 'test'
+        user_email: 'jeonms216@gmail.com'
+        user_name: 'Jeon-Min-seok'
+        commit_message: 'A custom message for the commit'
 
