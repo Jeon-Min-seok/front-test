@@ -65,4 +65,4 @@ jobs:
         git add .
         git diff
         git commit -m "Update ${{ steps.tag_version.outputs.new_tag }}" 
-        git push -u origin
+        git push --set-upstream origin main
