@@ -43,7 +43,7 @@ jobs:
 
     - name: change test-deployment.yaml
       run: |
-        cat <<EOF > test-deployment.yaml
+        cat <<EOF >> test-deployment.yaml
         image:
           tag: ${{ steps.tag_version.outputs.new_tag }}
         EOF
