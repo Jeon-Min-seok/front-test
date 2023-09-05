@@ -41,30 +41,32 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-    - name: Checkout for Kustomize repository
-      uses: actions/checkout@v2
-      with:
-        repository: Jeon-Min-seok/argo-cd # k8s yaml 파일이 있는 repo
-        ref: "main"  # branch 이름
-        github_token: ${{ secrets.TOKEN }} # Github Action token을 발급받아서 repo secrect에 등록해줘야한다
-        path: argo-cd # 최상위 경로로 repository와 동일하게 
-
-    - name: change index.html version
+    - name: Prepare
+      id: prep
       run: |
-        cat <<EOF > index.html
-        image:
-          tag: ${{ steps.tag_version.outputs.new_tag }}
-        EOF
-        
-    - name: Pushes test file
-      uses: dmnemec/copy_file_to_another_repo_action@main
+        VERSION=${GITHUB_SHA::8}
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF/refs\/tags\//}
+        fi
+        echo ::set-output name=BUILD_DATE::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+        echo ::set-output name=VERSION::${VERSION}
+
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Update manifests
+      run: ./update-k8s.sh $GITHUB_SHA
+
+    - name: Push directory to another repository
+      uses: cpina/github-action-push-to-another-repository@v1.2
+
       env:
         API_TOKEN_GITHUB: ${{ secrets.TOKEN }}
       with:
-        source_file: 'index.html'
-        destination_repo: 'argo-cd'
-        destination_folder: 'test'
-        user_email: 'jeonms216@gmail.com'
-        user_name: 'Jeon-Min-seok'
-        commit_message: 'A custom message for the commit'
+        source-directory: '/'
+        destination-github-username: 'Jeon-Min-seok'
+        destination-repository-name: 'argo-cd'
+        target-branch: 'main'
+        user-email: jeonms216@gmail.com
+        commit-message: "[ci skip] deploy from ${{ steps.prep.outputs.VERSION }}"
 
