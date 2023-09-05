@@ -41,32 +41,18 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-    - name: Prepare
-      id: prep
-      run: |
-        VERSION=${GITHUB_SHA::8}
-        if [[ $GITHUB_REF == refs/tags/* ]]; then
-          VERSION=${GITHUB_REF/refs\/tags\//}
-        fi
-        echo ::set-output name=BUILD_DATE::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-        echo ::set-output name=VERSION::${VERSION}
+    - name: Checkout
+      uses: actions/checkout@v2
 
-    - name: Checkout repo
-      uses: actions/checkout@v3
-
-    - name: Update manifests
-      run: ./update-k8s.sh $GITHUB_SHA
-
-    - name: Push directory to another repository
-      uses: cpina/github-action-push-to-another-repository@v1.2
-
+    - name: Pushes test file
+      uses: dmnemec/copy_file_to_another_repo_action@main
       env:
         API_TOKEN_GITHUB: ${{ secrets.TOKEN }}
       with:
-        source-directory: '/'
-        destination-github-username: 'Jeon-Min-seok'
-        destination-repository-name: 'argo-cd'
-        target-branch: 'main'
-        user-email: jeonms216@gmail.com
-        commit-message: "[ci skip] deploy from ${{ steps.prep.outputs.VERSION }}"
+        source_file: 'index.html'
+        destination_repo: 'Jeon-Min-seok/argo-cd'
+        #destination_folder: 'test-dir'
+        user_email: 'jeonms216@gmail.com'
+        user_name: 'Jeon-Min-seok'
+        commit_message: 'A custom message for the commit'
 
