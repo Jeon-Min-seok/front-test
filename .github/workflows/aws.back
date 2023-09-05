@@ -1,4 +1,4 @@
-name: push ecr # 이름설정
+name: test # 이름설정
 
 on:  # bracnch main push 감지 시 실행
   push:
@@ -41,11 +41,11 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-    - name: change index.html
+    - name: change test-deployment.yaml
       run: |
-        cat <<EOF > index.html
-        image:
-          tag: ${{ steps.tag_version.outputs.new_tag }}
+        cat <<EOF >> test-deployment.yaml
+        #image:
+        #  tag: ${{ steps.tag_version.outputs.new_tag }}
         EOF
 
     - name: Pushes test file
@@ -53,7 +53,7 @@ jobs:
       env:
         API_TOKEN_GITHUB: ${{ secrets.TOKEN }}
       with:
-        source_file: 'index.html'
+        source_file: 'test-deployment.yaml'
         destination_repo: 'Jeon-Min-seok/argo-cd'
         destination_folder: 'test'
         user_email: 'jeonms216@gmail.com'
