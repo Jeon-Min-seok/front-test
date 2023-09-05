@@ -41,6 +41,12 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
+    - name: change index.html
+      run: |
+        cat <<EOF > index.html
+        image:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+
     - name: Pushes test file
       uses: dmnemec/copy_file_to_another_repo_action@main
       env:
