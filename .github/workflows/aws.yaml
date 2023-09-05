@@ -56,10 +56,15 @@ jobs:
           tag: ${{ steps.tag_version.outputs.new_tag }}
         EOF
         
-    - name: git push
-      run: |
-        git clone https://${{ secrets.TOKEN }}@https://github.com/Jeon-Min-seok/argo-cd
-        git config --local user.email "jeonms216@gmail.com"
-        git config --local user.name "Jeon-Min-seok" 
-        git push https://token:${{ secrets.TOKEN }}@github.com/Jeon-Min-seok/argo-cd
+    - name: Pushes test file
+      uses: dmnemec/copy_file_to_another_repo_action@main
+      env:
+        API_TOKEN_GITHUB: ${{ secrets.TOKEN }}
+      with:
+        source_file: 'index.html'
+        destination_repo: 'argo-cd'
+        destination_folder: '/'
+        user_email: 'jeonms216@gmail.com'
+        user_name: 'Jeon-Min-seok'
+        commit_message: 'A custom message for the commit'
 
