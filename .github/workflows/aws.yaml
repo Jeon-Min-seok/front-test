@@ -63,7 +63,7 @@ jobs:
       with:
         source_file: 'index.html'
         destination_repo: 'argo-cd'
-        destination_folder: '/'
+        destination_folder: 'test'
         user_email: 'jeonms216@gmail.com'
         user_name: 'Jeon-Min-seok'
         commit_message: 'A custom message for the commit'
