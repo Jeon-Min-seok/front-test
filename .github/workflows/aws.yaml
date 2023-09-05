@@ -53,7 +53,7 @@ jobs:
       env:
         API_TOKEN_GITHUB: ${{ secrets.TOKEN }}
       with:
-        source_file: '/cicd/test-deployment.yaml'
+        source_file: 'test-deployment.yaml'
         destination_repo: 'Jeon-Min-seok/argo-cd'
         #destination_folder: 'test-dir'
         user_email: 'jeonms216@gmail.com'
