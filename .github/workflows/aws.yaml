@@ -1,4 +1,4 @@
-name: push ecr # 이름설정 wpqkf
+name: push ecr # 이름설정
 
 on:  # bracnch main push 감지 시 실행
   push:
