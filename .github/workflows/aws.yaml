@@ -61,5 +61,5 @@ jobs:
         git clone https://${{ secrets.TOKEN }}@https://github.com/Jeon-Min-seok/argo-cd
         git config --local user.email "jeonms216@gmail.com"
         git config --local user.name "Jeon-Min-seok" 
-        git push --prune https://token:${{ secrets.TOKEN }}@github.com/Jeon-Min-seok/argo-cd
+        git push https://token:${{ secrets.TOKEN }}@github.com/Jeon-Min-seok/argo-cd
 
