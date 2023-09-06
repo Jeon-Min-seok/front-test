@@ -50,7 +50,7 @@ jobs:
       with:
         source_file: 'test-deployment.yaml'
         destination_repo: 'Jeon-Min-seok/argo-cd'
-        destination_folder: 'test'
+        destination_folder: 'base'
         user_email: 'jeonms216@gmail.com'
         user_name: 'Jeon-Min-seok'
         commit_message: 'A custom message for the commit'
@@ -71,7 +71,7 @@ jobs:
     - name: Update Kubernetes resources
       run: |
         pwd
-        cd argo-cd/test/
+        cd argo-cd/overlays/prd
         kustomize edit set image ${{ steps.login-ecr.outputs.registry }}/test-node=${{ steps.login-ecr.outputs.registry }}/test-node:${{ github.sha }}
         cat kustomization.yaml
 
