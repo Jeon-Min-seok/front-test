@@ -43,12 +43,12 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         
 
-    - name: Pushes test file
+    - name: Pushes deployment file
       uses: dmnemec/copy_file_to_another_repo_action@main
       env:
         API_TOKEN_GITHUB: ${{ secrets.TOKEN }}
       with:
-        source_file: 'test-deployment.yaml'
+        source_file: 'cicd/test-deployment.yaml'
         destination_repo: 'Jeon-Min-seok/argo-cd'
         destination_folder: 'test'
         user_email: 'jeonms216@gmail.com'
