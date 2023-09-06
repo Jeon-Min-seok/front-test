@@ -5,7 +5,7 @@ on:  # bracnch main push 감지 시 실행
     branches: [ main ]
 
 jobs:
-  build:   
+  ci:   
     name: Build Image
     runs-on: ubuntu-latest # ubuntu에서 실행
 
@@ -42,12 +42,6 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         
-    - name: change test-deployment.yaml
-      run: |
-        cat <<EOF >> test-deployment.yaml
-        #image:
-        #  tag: ${{ steps.image.outputs.version }}
-        EOF
 
     - name: Pushes test file
       uses: dmnemec/copy_file_to_another_repo_action@main
@@ -60,4 +54,34 @@ jobs:
         user_email: 'jeonms216@gmail.com'
         user_name: 'Jeon-Min-seok'
         commit_message: 'A custom message for the commit'
+
+
+    - name: Checkout for Kustomize repository
+      uses: actions/checkout@v2
+      with:
+           # kubernetes yaml 파일 저장
+            repository: Jeon-Min-seok/argo-cd # k8s yaml 파일이 있는 repo
+            ref: main  # branch 이름
+        
+            path: argo-cd # 최상위 경로로 repository와 동일하게 설정
+
+        # 새 이미지 버전으로 파일의 태그값 수정
+        # cd path 수정
+        # kustomize 로 image tag 값 변경
+    - name: Update Kubernetes resources
+      run: |
+        pwd
+        cd test
+        kustomize edit set image ${{ steps.login-ecr.outputs.registry }}/test-node=${{ steps.login-ecr.outputs.registry }}/test-node:${{ github.sha }}
+        cat kustomization.yaml
+
+        # 수정된 kustomization.yaml 파일 commit push
+    - name: Commit minifest files
+      run: |
+        cd test
+        git config --global user.email "jeonms216@gmail.com"
+        git config --global user.name "Jeon-Min-seok"
+        git commit -am "Update image tag $"
+        git push -u origin main
+
 
