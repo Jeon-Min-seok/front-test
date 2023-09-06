@@ -26,7 +26,7 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Get image tag(verion)
+    - name: Get image version
       id: image
       run: |
         VERSION=$(echo \${{ github.sha }} | cut -c1-8)
@@ -41,28 +41,47 @@ jobs:
       run: | # 도커 파일 빌드 후 푸쉬
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        
-    - name: change kustomization.yaml
+    
+      # kustomize 명령을 가져온다.
+    - name: Setup Kustomize
+      uses: imranismail/setup-kustomize@v1
+
+    - name: Checkout kustomize repository
+      uses: actions/checkout@v2
+      with:
+          # kubernetes 설정정보 저장소
+        repository: Jeon-Min-seok/argo-cd
+        ref: main
+          # 다른 저장소에 push 하려면 Personal Access Token이 필요.
+        token: ${{ secrets.TOKEN }}
+        path: argo-cd
+      # 새 이미지 버전으로 파일 수정
+    - name: Update Kubernetes resources
       run: |
-        cd cicd
-        cat <<EOF > kustomization.yaml
-        resources:
-        - test-deployment.yaml
+        pwd
+        cd test/
+        echo \${{ steps.login-ecr.outputs.registry }}/\${{ env.ECR_REPOSITORY }}
+        echo \${{ steps.login-ecr.outputs.registry }}/\${{ env.ECR_REPOSITORY }}:\${{ github.sha }}
+        kustomize edit set image \${{ steps.login-ecr.outputs.registry }}/\${{ env.ECR_REPOSITORY }}=\${{ steps.login-ecr.outputs.registry }}/\${{ env.ECR_REPOSITORY }}:\${{ github.sha }}
+        cat kustomization.yaml
+          
+      # 수정된 파일 commit & push
+    - name: Commit files
+      run: |
+        cd example-app-kustomize
+        git config --global user.email "github-actions@github.com"
+        git config --global user.name "github-actions"
+        git commit -am "Update image tag"
+        git push -u origin 
 
-        images:
-        - name: ${{ steps.login-ecr.outputs.registry }}/test-node
-          newName: ${{ steps.login-ecr.outputs.registry }}/test-node
-          newTag: ${{ steps.image.outputs.version }}
-
-    - name: Pushes test file
+    - name: Pushes delpoyment file
       uses: dmnemec/copy_file_to_another_repo_action@main
       env:
-        API_TOKEN_GITHUB: ${{ secrets.TOKEN }}
+      API_TOKEN_GITHUB: ${{ secrets.TOKEN }}
       with:
-        source_file: 'cicd'
+        source_file: 'test-deployment.yaml'
         destination_repo: 'Jeon-Min-seok/argo-cd'
         destination_folder: 'test'
         user_email: 'jeonms216@gmail.com'
         user_name: 'Jeon-Min-seok'
         commit_message: 'A custom message for the commit'
-
