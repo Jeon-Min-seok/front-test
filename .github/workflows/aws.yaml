@@ -37,17 +37,21 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: test-node # !!!!!!!본인의 ecr로 변경 필요!!!!!!!!
-        IMAGE_TAG: latest
+        IMAGE_TAG: ${{ steps.image.outputs.version }}
       run: | # 도커 파일 빌드 후 푸쉬
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         
-    - name: change test-deployment.yaml
+    - name: change kustomization.yaml
       run: |
-        cat <<EOF >> test-deployment.yaml
-        #image:
-        #  tag: ${{ steps.image.outputs.version }}
-        EOF
+        cat <<EOF > kustomization.yaml
+        resources:
+        - test-deployment.yaml
+
+        images:
+        - name: $ECR_REGISTRY/$ECR_REPOSITORY
+          newName: $ECR_REGISTRY/$ECR_REPOSITORY
+          newTag: $IMAGE_TAG
 
     - name: Pushes test file
       uses: dmnemec/copy_file_to_another_repo_action@main
