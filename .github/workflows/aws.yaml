@@ -46,7 +46,7 @@ jobs:
       run: |
         cat <<EOF >> test-deployment.yaml
         #image:
-        #  tag: \${{ steps.image.outputs.version }}
+        #  tag: ${{ steps.image.outputs.version }}
         EOF
 
     - name: Pushes test file
