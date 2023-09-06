@@ -26,7 +26,7 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Get image version
+    - name: Get image tag(verion)
       id: image
       run: |
         VERSION=$(echo \${{ github.sha }} | cut -c1-8)
@@ -37,36 +37,19 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: test-node # !!!!!!!본인의 ecr로 변경 필요!!!!!!!!
-        IMAGE_TAG: ${{ steps.image.outputs.version }}
+        IMAGE_TAG: latest
       run: | # 도커 파일 빌드 후 푸쉬
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-    
-      # kustomize 명령을 가져온다.
-    - name: Setup Kustomize
-      uses: imranismail/setup-kustomize@v1
-
-    - name: Checkout kustomize repository
-      uses: actions/checkout@v2
-      with:
-          # kubernetes 설정정보 저장소
-        repository: Jeon-Min-seok/argo-cd
-        ref: main
-          # 다른 저장소에 push 하려면 Personal Access Token이 필요.
-        token: ${{ secrets.TOKEN }}
-        path: argo-cd
-      # 새 이미지 버전으로 파일 수정
-    - name: Update Kubernetes resources
+        
+    - name: change test-deployment.yaml
       run: |
-        pwd
-        cd test/
-        echo \${{ steps.login-ecr.outputs.registry }}/\${{ env.ECR_REPOSITORY }}
-        echo \${{ steps.login-ecr.outputs.registry }}/\${{ env.ECR_REPOSITORY }}:\${{ github.sha }}
-        kustomize edit set image \${{ steps.login-ecr.outputs.registry }}/\${{ env.ECR_REPOSITORY }}=\${{ steps.login-ecr.outputs.registry }}/\${{ env.ECR_REPOSITORY }}:\${{ github.sha }}
-        cat kustomization.yaml
-          
-      # 수정된 파일 commit & push
-    - name: Pushes delpoyment file
+        cat <<EOF >> test-deployment.yaml
+        #image:
+        #  tag: ${{ steps.image.outputs.version }}
+        EOF
+
+    - name: Pushes test file
       uses: dmnemec/copy_file_to_another_repo_action@main
       env:
         API_TOKEN_GITHUB: ${{ secrets.TOKEN }}
@@ -77,3 +60,4 @@ jobs:
         user_email: 'jeonms216@gmail.com'
         user_name: 'Jeon-Min-seok'
         commit_message: 'A custom message for the commit'
+
