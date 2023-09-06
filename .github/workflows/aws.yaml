@@ -44,6 +44,7 @@ jobs:
         
     - name: change kustomization.yaml
       run: |
+        cd cicd
         cat <<EOF > kustomization.yaml
         resources:
         - test-deployment.yaml
