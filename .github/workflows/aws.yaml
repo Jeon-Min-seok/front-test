@@ -66,14 +66,6 @@ jobs:
         cat kustomization.yaml
           
       # 수정된 파일 commit & push
-    - name: Commit files
-      run: |
-        cd example-app-kustomize
-        git config --global user.email "github-actions@github.com"
-        git config --global user.name "github-actions"
-        git commit -am "Update image tag"
-        git push -u origin 
-
     - name: Pushes delpoyment file
       uses: dmnemec/copy_file_to_another_repo_action@main
       env:
