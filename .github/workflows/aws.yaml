@@ -15,6 +15,13 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v2 #checkout action 사용
 
+    - name: Get image tag(verion)
+      id: image
+      run: |
+        VERSION=\$(echo \${{ github.sha }} | cut -c1-8)
+        echo VERSION=\$VERSION
+        echo "::set-output name=version::\$VERSION"
+        
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -34,13 +41,12 @@ jobs:
       run: | # 도커 파일 빌드 후 푸쉬
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
         
     - name: change test-deployment.yaml
       run: |
         cat <<EOF >> test-deployment.yaml
         #image:
-        #  tag: ${{ github.sha }}
+        #  tag: \${{ steps.image.outputs.version }}
         EOF
 
     - name: Pushes test file
