@@ -1,4 +1,4 @@
-name: test  이름설정
+name: test #qwe
 
 on:  # bracnch main push 감지 시 실행
   push:
