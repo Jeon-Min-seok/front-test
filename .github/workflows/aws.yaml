@@ -69,7 +69,7 @@ jobs:
     - name: Pushes delpoyment file
       uses: dmnemec/copy_file_to_another_repo_action@main
       env:
-      API_TOKEN_GITHUB: ${{ secrets.TOKEN }}
+        API_TOKEN_GITHUB: ${{ secrets.TOKEN }}
       with:
         source_file: 'test-deployment.yaml'
         destination_repo: 'Jeon-Min-seok/argo-cd'
