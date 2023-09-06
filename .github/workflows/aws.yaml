@@ -78,10 +78,10 @@ jobs:
         # 수정된 kustomization.yaml 파일 commit push
     - name: Commit minifest files
       run: |
-        cd test
+        cd argo-cd/test
         git config --global user.email "jeonms216@gmail.com"
         git config --global user.name "Jeon-Min-seok"
-        git commit -am "Update image tag $"
+        git commit -am "Update image tag"
         git push -u origin main
 
 
