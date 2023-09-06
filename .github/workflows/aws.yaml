@@ -50,9 +50,9 @@ jobs:
         - test-deployment.yaml
 
         images:
-        - name: $ECR_REGISTRY/$ECR_REPOSITORY
-          newName: $ECR_REGISTRY/$ECR_REPOSITORY
-          newTag: $IMAGE_TAG
+        - name: ${{ steps.login-ecr.outputs.registry }}/test-node
+          newName: ${{ steps.login-ecr.outputs.registry }}/test-node
+          newTag: ${{ steps.image.outputs.version }}
 
     - name: Pushes test file
       uses: dmnemec/copy_file_to_another_repo_action@main
