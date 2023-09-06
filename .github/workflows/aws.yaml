@@ -71,7 +71,7 @@ jobs:
     - name: Update Kubernetes resources
       run: |
         pwd
-        cd argo-cd/overlays/prd
+        cd argo-cd/overlays/dev
         kustomize edit set image ${{ steps.login-ecr.outputs.registry }}/test-node=${{ steps.login-ecr.outputs.registry }}/test-node:${{ github.sha }}
         cat kustomization.yaml
 
