@@ -50,7 +50,7 @@ jobs:
       with:
         source_file: 'test-deployment.yaml'
         destination_repo: 'Jeon-Min-seok/argo-cd'
-        destination_folder: 'base'
+        destination_folder: '/base'
         user_email: 'jeonms216@gmail.com'
         user_name: 'Jeon-Min-seok'
         commit_message: 'A custom message for the commit'
