@@ -42,7 +42,7 @@ jobs:
       run: |
         cat <<EOF >> test-deployment.yaml
         #image:
-        #  tag: ${{ steps.tag_version.outputs.new_tag }}
+        #  tag: ${{ github.sha }}
         EOF
 
     - name: Pushes test file
