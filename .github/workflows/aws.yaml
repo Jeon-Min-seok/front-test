@@ -62,7 +62,7 @@ jobs:
            # kubernetes yaml 파일 저장
             repository: Jeon-Min-seok/argo-cd # k8s yaml 파일이 있는 repo
             ref: main  # branch 이름
-        
+            token: ${{ secrets.TOKEN }}
             path: argo-cd # 최상위 경로로 repository와 동일하게 설정
 
         # 새 이미지 버전으로 파일의 태그값 수정
