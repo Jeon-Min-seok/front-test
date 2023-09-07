@@ -23,7 +23,7 @@ jobs:
         aws-region: us-east-2 # ecr이 위치하는 리전
 
     - name: Login to Amazon ECR
-      id: login-ecr
+      id: login-ecr-id
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Get image tag(verion)
