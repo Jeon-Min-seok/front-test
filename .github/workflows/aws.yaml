@@ -26,7 +26,7 @@ jobs:
           aws-region: us-east-2
 
       - name: Login to Amazon ECR Backend
-        id: login-ecr
+        id: login-ecr-id
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Get image tag(verion) # github version 사용
