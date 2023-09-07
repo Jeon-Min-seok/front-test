@@ -1,47 +1,85 @@
-name: CI
+name: test #123qwe
 
-# 코드 변경이 main 브랜치에 푸시될 때 자동 실행
-on:
+on:  # bracnch main push 감지 시 실행
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  build-backend:
-    runs-on: ubuntu-latest
+  ci:   
+    name: Build Image
+    runs-on: ubuntu-latest # ubuntu에서 실행
+
+   
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
 
-      - name: Set up Node.js and Build Backend
-        uses: actions/setup-node@v2
-        with:
-          node-version: '18'
+    - name: Check out code
+      uses: actions/checkout@v2 #checkout action 사용
+        
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-2 # ecr이 위치하는 리전
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Login to Amazon ECR Backend
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+    - name: Get image tag(verion)
+      id: image
+      run: |
+        VERSION=$(echo \${{ github.sha }} | cut -c1-8)
+        echo VERSION=$VERSION
+        echo "::set-output name=version::$VERSION"
 
-      - name: Get image tag(verion) # github version 사용
-        id: image
-        run: |
-          VERSION=$(echo \${{ github.sha }} | cut -c1-8)
-          echo VERSION=$VERSION
-          echo "::set-output name=version::$VERSION"
-          
-      - name: Build, tag, and push image to Amazon ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: teamb-back # !!!!!!!본인의 ecr로 변경 필요!!!!!!!!
-          IMAGE_TAG: ${{ github.sha }}
-        run: | # 도커 파일 빌드 후 푸쉬
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    - name: Build, tag, and push image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: test-node # !!!!!!!본인의 ecr로 변경 필요!!!!!!!!
+        IMAGE_TAG: ${{ github.sha }}
+      run: | # 도커 파일 빌드 후 푸쉬
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        
 
+   # - name: Pushes deployment file
+      #uses: dmnemec/copy_file_to_another_repo_action@main
+      #env:
+      #  API_TOKEN_GITHUB: ${{ secrets.TOKEN }}
+      #with:
+       # source_file: 'test-deployment.yaml'
+       # destination_repo: 'Jeon-Min-seok/argo-cd'
+       # destination_folder: '/base'
+       # user_email: 'jeonms216@gmail.com'
+       # user_name: 'Jeon-Min-seok'
+       # commit_message: 'A custom message for the commit'
+
+
+    - name: Checkout for Kustomize repository
+      uses: actions/checkout@v2
+      with:
+           # kubernetes yaml 파일 저장
+            repository: Jeon-Min-seok/argo-cd # k8s yaml 파일이 있는 repo
+            ref: main  # branch 이름
+            token: ${{ secrets.TOKEN }}
+            path: argo-cd # 최상위 경로로 repository와 동일하게 설정
+
+        # 새 이미지 버전으로 파일의 태그값 수정
+        # cd path 수정
+        # kustomize 로 image tag 값 변경
+    - name: Update Kubernetes resources
+      run: |
+        pwd
+        cd argo-cd/overlays/dev
+        kustomize edit set image ${{ steps.login-ecr.outputs.registry }}/test-node=${{ steps.login-ecr.outputs.registry }}/test-node:${{ github.sha }}
+        cat kustomization.yaml
+
+        # 수정된 kustomization.yaml 파일 commit push
+    - name: Commit minifest files
+      run: |
+        cd argo-cd
+        git config --global user.email "jeonms216@gmail.com"
+        git config --global user.name "Jeon-Min-seok"
+        git commit -am "Update image tag"
+        git push -u origin main
