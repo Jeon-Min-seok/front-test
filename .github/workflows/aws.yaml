@@ -58,7 +58,7 @@ jobs:
       run: |
         pwd
         cd argo-cd/overlays/dev
-        kustomize edit set image ${{ steps.login-ecr.outputs.registry }}/test-node=${{ steps.login-ecr.outputs.registry }}/test-node:${{ github.sha }}
+        kustomize edit set image ${{ steps.login-ecr.outputs.registry }}/test-node=${{ steps.login-ecr.outputs.registry }}/ssac-back:${{ github.sha }}
         cat kustomization.yaml
 
         # 수정된 kustomization.yaml 파일 commit push
