@@ -1,4 +1,4 @@
-name: test #123
+name: test #
 
 on:  # bracnch main push 감지 시 실행
   push:
