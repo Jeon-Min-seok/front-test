@@ -1,0 +1,47 @@
+name: CI
+
+# 코드 변경이 main 브랜치에 푸시될 때 자동 실행
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js and Build Backend
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }} 
+
+      - name: Login to Amazon ECR Backend
+        id: login-ecr-backend
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Get image tag(verion) # github version 사용
+        id: image
+        run: |
+          VERSION=$(echo \${{ github.sha }} | cut -c1-8)
+          echo VERSION=$VERSION
+          echo "::set-output name=version::$VERSION"
+          
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: test-node # !!!!!!!본인의 ecr로 변경 필요!!!!!!!!
+          IMAGE_TAG: ${{ github.sha }}
+        run: | # 도커 파일 빌드 후 푸쉬
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
